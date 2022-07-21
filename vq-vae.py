@@ -417,13 +417,13 @@ for i in xrange(num_training_updates):
         with torch.no_grad():
             valid_reconstructions = utils.reconstruct(model, valid_originals, device)
             samples = torch.cat([valid_originals, valid_reconstructions], dim=0).cpu().data + 0.5
-            wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i)
+            wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i+1)
 
             proj = umap.UMAP(n_neighbors=3,
                              min_dist=0.1,
                              metric='cosine').fit_transform(model._vq_vae._embedding.weight.data.cpu())
             plt.scatter(proj[:, 0], proj[:, 1], alpha=0.3)
-            wandb.log({'codebook': wandb.Image(plt)}, step=i)
+            wandb.log({'codebook': wandb.Image(plt)}, step=i+1)
             plt.close()
 
 # ## Plot Loss
