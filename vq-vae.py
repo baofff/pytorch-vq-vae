@@ -413,7 +413,7 @@ for i in xrange(args.num_training_updates):
         print('perplexity: %.3f, ub: %.3f' % (np.mean(train_res_perplexity[-100:]), np.log(args.num_embeddings)))
         print()
 
-    if (i+1) % 5000 == 0:
+    if (i+1) % 1000 == 0:
         model.eval()
         with torch.no_grad():
             valid_reconstructions = utils.reconstruct(model, valid_originals, device)
