@@ -412,7 +412,7 @@ for i in xrange(num_training_updates):
     if (i+1) % 100 == 0:
         print('%d iterations' % (i+1))
         print('recon_error: %.3f' % np.mean(train_res_recon_error[-100:]))
-        print('perplexity: %.3f' % np.mean(train_res_perplexity[-100:]))
+        print('perplexity: %.3f, ub: %.3f' % (np.mean(train_res_perplexity[-100:]), np.log(num_embeddings)))
         print()
 
     if (i+1) % 5000 == 0:
