@@ -13,6 +13,9 @@ from six.moves import xrange
 import umap
 
 import torch
+torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = False
+
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -25,16 +28,10 @@ import utils
 import wandb
 
 
-# In[2]:
+
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-# ## Load Data
-
-# In[3]:
-
 
 training_data = datasets.CIFAR10(root="../assets/datasets/cifar10", train=True, download=True,
                                   transform=transforms.Compose([
@@ -417,16 +414,17 @@ for i in xrange(num_training_updates):
 
     if (i+1) % 5000 == 0:
         model.eval()
-        valid_reconstructions = utils.reconstruct(model, valid_originals, device)
-        samples = torch.cat([valid_originals, valid_reconstructions], dim=0).cpu().data + 0.5
-        wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i)
+        with torch.no_grad():
+            valid_reconstructions = utils.reconstruct(model, valid_originals, device)
+            samples = torch.cat([valid_originals, valid_reconstructions], dim=0).cpu().data + 0.5
+            wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i)
 
-        proj = umap.UMAP(n_neighbors=3,
-                         min_dist=0.1,
-                         metric='cosine').fit_transform(model._vq_vae._embedding.weight.data.cpu())
-        plt.scatter(proj[:, 0], proj[:, 1], alpha=0.3)
-        wandb.log({'codebook': wandb.Image(plt)}, step=i)
-        plt.close()
+            proj = umap.UMAP(n_neighbors=3,
+                             min_dist=0.1,
+                             metric='cosine').fit_transform(model._vq_vae._embedding.weight.data.cpu())
+            plt.scatter(proj[:, 0], proj[:, 1], alpha=0.3)
+            wandb.log({'codebook': wandb.Image(plt)}, step=i)
+            plt.close()
 
 # ## Plot Loss
 
