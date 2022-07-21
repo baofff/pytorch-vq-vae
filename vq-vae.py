@@ -155,7 +155,7 @@ class VectorQuantizerEMA(nn.Module):
         
         # Use EMA to update the embedding vectors
         if self.training:
-            self._ema_cluster_size = self._ema_cluster_size * self._decay +                                      (1 - self._decay) * torch.sum(encodings, 0)
+            self._ema_cluster_size = self._ema_cluster_size * self._decay + (1 - self._decay) * torch.sum(encodings, 0)
             
             # Laplace smoothing of the cluster size
             n = torch.sum(self._ema_cluster_size.data)
