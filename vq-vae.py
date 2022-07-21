@@ -297,29 +297,30 @@ class Decoder(nn.Module):
 
 # In[10]:
 
+import argparse
 
-batch_size = 256
-num_training_updates = 15000
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('batch_size', default=256)
+    parser.add_argument('num_training_updates', default=15000)
+    parser.add_argument('num_hiddens', default=128)
+    parser.add_argument('num_residual_hiddens', default=32)
+    parser.add_argument('num_residual_layers', default=2)
+    parser.add_argument('embedding_dim', default=64)
+    parser.add_argument('num_embeddings', default=512)
+    parser.add_argument('commitment_cost', default=0.25)
+    parser.add_argument('decay', default=0.99)
+    parser.add_argument('learning_rate', default=1e-3)
+    return parser.parse_args()
 
-num_hiddens = 128
-num_residual_hiddens = 32
-num_residual_layers = 2
 
-embedding_dim = 64
-num_embeddings = 512
-
-commitment_cost = 0.25
-
-decay = 0.99
-
-learning_rate = 1e-3
-
+args = parse_args()
 
 # In[11]:
 
 
 training_loader = DataLoader(training_data, 
-                             batch_size=batch_size, 
+                             batch_size=args.batch_size,
                              shuffle=True,
                              pin_memory=True)
 
@@ -371,15 +372,15 @@ class Model(nn.Module):
 # In[14]:
 
 
-model = Model(num_hiddens, num_residual_layers, num_residual_hiddens,
-              num_embeddings, embedding_dim, 
-              commitment_cost, decay).to(device)
+model = Model(args.num_hiddens, args.num_residual_layers, args.num_residual_hiddens,
+              args.num_embeddings, args.embedding_dim,
+              args.commitment_cost, args.decay).to(device)
 
 
 # In[15]:
 
 
-optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
+optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, amsgrad=False)
 
 (valid_originals, _) = next(iter(validation_loader))
 valid_originals = valid_originals.to(device)
@@ -390,7 +391,7 @@ train_res_perplexity = []
 
 
 wandb.init(project='vq-vae')
-for i in xrange(num_training_updates):
+for i in xrange(args.num_training_updates):
     model.train()
     (data, _) = next(iter(training_loader))
     data = data.to(device)
@@ -409,7 +410,7 @@ for i in xrange(num_training_updates):
     if (i+1) % 100 == 0:
         print('%d iterations' % (i+1))
         print('recon_error: %.3f' % np.mean(train_res_recon_error[-100:]))
-        print('perplexity: %.3f, ub: %.3f' % (np.mean(train_res_perplexity[-100:]), np.log(num_embeddings)))
+        print('perplexity: %.3f, ub: %.3f' % (np.mean(train_res_perplexity[-100:]), np.log(args.num_embeddings)))
         print()
 
     if (i+1) % 5000 == 0:
@@ -425,54 +426,3 @@ for i in xrange(num_training_updates):
             plt.scatter(proj[:, 0], proj[:, 1], alpha=0.3)
             wandb.log({'codebook': wandb.Image(plt)}, step=i+1)
             plt.close()
-
-# ## Plot Loss
-
-# In[17]:
-
-
-# train_res_recon_error_smooth = savgol_filter(train_res_recon_error, 201, 7)
-# train_res_perplexity_smooth = savgol_filter(train_res_perplexity, 201, 7)
-
-
-# In[18]:
-
-
-# f = plt.figure(figsize=(16,8))
-# ax = f.add_subplot(1,2,1)
-# ax.plot(train_res_recon_error_smooth)
-# ax.set_yscale('log')
-# ax.set_title('Smoothed NMSE.')
-# ax.set_xlabel('iteration')
-#
-# ax = f.add_subplot(1,2,2)
-# ax.plot(train_res_perplexity_smooth)
-# ax.set_title('Smoothed Average codebook usage (perplexity).')
-# ax.set_xlabel('iteration')
-
-
-# ## View Reconstructions
-
-# In[19]:
-
-
-
-
-
-# ## View Embedding
-
-# In[24]:
-
-
-
-
-# In[25]:
-
-
-
-
-# In[ ]:
-
-
-
-
