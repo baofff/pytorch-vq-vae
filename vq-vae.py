@@ -301,16 +301,16 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('batch_size', default=256)
-    parser.add_argument('num_training_updates', default=15000)
-    parser.add_argument('num_hiddens', default=128)
-    parser.add_argument('num_residual_hiddens', default=32)
-    parser.add_argument('num_residual_layers', default=2)
-    parser.add_argument('embedding_dim', default=64)
-    parser.add_argument('num_embeddings', default=512)
-    parser.add_argument('commitment_cost', default=0.25)
-    parser.add_argument('decay', default=0.99)
-    parser.add_argument('learning_rate', default=1e-3)
+    parser.add_argument('--batch_size', default=256)
+    parser.add_argument('--num_training_updates', default=15000)
+    parser.add_argument('--num_hiddens', default=128)
+    parser.add_argument('--num_residual_hiddens', default=32)
+    parser.add_argument('--num_residual_layers', default=2)
+    parser.add_argument('--embedding_dim', default=64)
+    parser.add_argument('--num_embeddings', default=512)
+    parser.add_argument('--commitment_cost', default=0.25)
+    parser.add_argument('--decay', default=0.99)
+    parser.add_argument('--learning_rate', default=1e-3)
     return parser.parse_args()
 
 
