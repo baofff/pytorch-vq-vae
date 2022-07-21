@@ -1,52 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # [VQ-VAE](https://arxiv.org/abs/1711.00937) by  [Aäron van den Oord](https://twitter.com/avdnoord) et al. in PyTorch
-# 
-# ## Introduction
-# 
-# Variational Auto Encoders (VAEs) can be thought of as what all but the last layer of a neural network is doing, namely feature extraction or seperating out the data. Thus given some data we can think of using a neural network for representation generation. 
-# 
-# Recall that the goal of a generative model is to estimate the probability distribution of high dimensional data such as images, videos, audio or even text by learning the underlying structure in the data as well as the dependencies between the different elements of the data. This is very useful since we can then use this representation to generate new data with similar properties. This way we can also learn useful features from the data in an unsupervised fashion.
-# 
-# The VQ-VAE uses a discrete latent representation mostly because many important real-world objects are discrete. For example in images we might have categories like "Cat", "Car", etc. and it might not make sense to interpolate between these categories. Discrete representations are also easier to model since each category has a single value whereas if we had a continous latent space then we will need to normalize this density function and learn the dependencies between the different variables which could be very complex.
-# 
-# ### Code
-# 
-# I have followed the code from the TensorFlow implementation by the author which you can find here [vqvae.py](https://github.com/deepmind/sonnet/blob/master/sonnet/python/modules/nets/vqvae.py) and [vqvae_example.ipynb](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb). 
-# 
-# Another PyTorch implementation is found at [pytorch-vqvae](https://github.com/ritheshkumar95/pytorch-vqvae).
-# 
-# 
-# ## Basic Idea
-# 
-# The overall architecture is summarized in the diagram below:
-# 
-# ![](images/vq-vae.png)
-
-# We start by defining a latent embedding space of dimension `[K, D]` where `K` are the number of embeddings and `D` is the dimensionality of each latent embeddng vector, i.e. $e_i \in \mathbb{R}^{D}$. The model is comprised of an encoder and a decoder. The encoder will map the input to a sequence of discrete latent variables, whereas the decoder will try to reconstruct the input from these latent sequences. 
-# 
-# More preciesly, the model will take in batches of RGB images,  say $x$, each of size 32x32 for our example, and pass it through a ConvNet encoder producing some output $E(x)$, where we make sure the channels are the same as the dimensionality of the latent embedding vectors. To calculate the discrete latent variable we find the nearest embedding vector and output it's index. 
-# 
-# The input to the decoder is the embedding vector corresponding to the index which is passed through the decoder to produce the reconstructed image. 
-# 
-# Since the nearest neighbour lookup has no real gradient in the backward pass we simply pass the gradients from the decoder to the encoder  unaltered. The intuition is that since the output representation of the encoder and the input to the decoder share the same `D` channel dimensional space, the gradients contain useful information for how the encoder has to change its output to lower the reconstruction loss.
-# 
-# ## Loss
-# 
-# The total loss is actually composed of three components
-# 
-# 1. **reconstruction loss**: which optimizes the decoder and encoder
-# 1. **codebook loss**: due to the fact that gradients bypass the embedding, we use a dictionary learning algorithm  which uses an $l_2$  error to move the embedding vectors $e_i$ towards the encoder output
-# 1. **commitment loss**:  since the volume of the embedding space is dimensionless, it can grow arbirtarily if the embeddings $e_i$ do not train as fast as  the encoder parameters, and thus we add a commitment loss to make sure that the encoder commits to an embedding
-
-# In[1]:
-
-
-#!pip3 install -U -r requirements.txt
-
-
-# In[1]:
 
 
 from __future__ import print_function
@@ -83,13 +34,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # In[3]:
 
 
-training_data = datasets.CIFAR10(root="data", train=True, download=True,
+training_data = datasets.CIFAR10(root="../assets/datasets/cifar10", train=True, download=True,
                                   transform=transforms.Compose([
                                       transforms.ToTensor(),
                                       transforms.Normalize((0.5,0.5,0.5), (1.0,1.0,1.0))
                                   ]))
 
-validation_data = datasets.CIFAR10(root="data", train=False, download=True,
+validation_data = datasets.CIFAR10(root="../assets/datasets/cifar10", train=False, download=True,
                                   transform=transforms.Compose([
                                       transforms.ToTensor(),
                                       transforms.Normalize((0.5,0.5,0.5), (1.0,1.0,1.0))
