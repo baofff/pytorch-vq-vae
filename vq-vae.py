@@ -390,6 +390,8 @@ model.train()
 train_res_recon_error = []
 train_res_perplexity = []
 
+
+wandb.init(project='vq-vae')
 for i in xrange(num_training_updates):
     model.train()
     (data, _) = next(iter(training_loader))
@@ -418,29 +420,36 @@ for i in xrange(num_training_updates):
         samples = torch.cat([valid_originals, valid_reconstructions], dim=0).cpu().data + 0.5
         wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i)
 
+        proj = umap.UMAP(n_neighbors=3,
+                         min_dist=0.1,
+                         metric='cosine').fit_transform(model._vq_vae._embedding.weight.data.cpu())
+        plt.scatter(proj[:, 0], proj[:, 1], alpha=0.3)
+        wandb.log({'codebook': wandb.Image(plt)}, step=i)
+        plt.close()
+
 # ## Plot Loss
 
 # In[17]:
 
 
-train_res_recon_error_smooth = savgol_filter(train_res_recon_error, 201, 7)
-train_res_perplexity_smooth = savgol_filter(train_res_perplexity, 201, 7)
+# train_res_recon_error_smooth = savgol_filter(train_res_recon_error, 201, 7)
+# train_res_perplexity_smooth = savgol_filter(train_res_perplexity, 201, 7)
 
 
 # In[18]:
 
 
-f = plt.figure(figsize=(16,8))
-ax = f.add_subplot(1,2,1)
-ax.plot(train_res_recon_error_smooth)
-ax.set_yscale('log')
-ax.set_title('Smoothed NMSE.')
-ax.set_xlabel('iteration')
-
-ax = f.add_subplot(1,2,2)
-ax.plot(train_res_perplexity_smooth)
-ax.set_title('Smoothed Average codebook usage (perplexity).')
-ax.set_xlabel('iteration')
+# f = plt.figure(figsize=(16,8))
+# ax = f.add_subplot(1,2,1)
+# ax.plot(train_res_recon_error_smooth)
+# ax.set_yscale('log')
+# ax.set_title('Smoothed NMSE.')
+# ax.set_xlabel('iteration')
+#
+# ax = f.add_subplot(1,2,2)
+# ax.plot(train_res_perplexity_smooth)
+# ax.set_title('Smoothed Average codebook usage (perplexity).')
+# ax.set_xlabel('iteration')
 
 
 # ## View Reconstructions
@@ -456,15 +465,11 @@ ax.set_xlabel('iteration')
 # In[24]:
 
 
-proj = umap.UMAP(n_neighbors=3,
-                 min_dist=0.1,
-                 metric='cosine').fit_transform(model._vq_vae._embedding.weight.data.cpu())
 
 
 # In[25]:
 
 
-plt.scatter(proj[:,0], proj[:,1], alpha=0.3)
 
 
 # In[ ]:
