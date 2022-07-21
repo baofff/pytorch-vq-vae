@@ -385,6 +385,7 @@ model = Model(num_hiddens, num_residual_layers, num_residual_hiddens,
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
 
 (valid_originals, _) = next(iter(validation_loader))
+valid_originals = valid_originals.to(device)
 
 model.train()
 train_res_recon_error = []
