@@ -21,6 +21,8 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torchvision.utils import make_grid
+import utils
+import wandb
 
 
 # In[2]:
@@ -382,15 +384,14 @@ model = Model(num_hiddens, num_residual_layers, num_residual_hiddens,
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
 
-
-# In[ ]:
-
+(valid_originals, _) = next(iter(validation_loader))
 
 model.train()
 train_res_recon_error = []
 train_res_perplexity = []
 
 for i in xrange(num_training_updates):
+    model.train()
     (data, _) = next(iter(training_loader))
     data = data.to(device)
     optimizer.zero_grad()
@@ -411,6 +412,11 @@ for i in xrange(num_training_updates):
         print('perplexity: %.3f' % np.mean(train_res_perplexity[-100:]))
         print()
 
+    if (i+1) % 5000 == 0:
+        model.eval()
+        valid_reconstructions = utils.reconstruct(model, valid_originals, device)
+        samples = torch.cat([valid_originals, valid_reconstructions], dim=0).cpu().data + 0.5
+        wandb.log({'samples': wandb.Image(make_grid(samples))}, step=i)
 
 # ## Plot Loss
 
@@ -442,44 +448,7 @@ ax.set_xlabel('iteration')
 # In[19]:
 
 
-model.eval()
 
-(valid_originals, _) = next(iter(validation_loader))
-valid_originals = valid_originals.to(device)
-
-vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
-_, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
-valid_reconstructions = model._decoder(valid_quantize)
-
-
-# In[20]:
-
-
-(train_originals, _) = next(iter(training_loader))
-train_originals = train_originals.to(device)
-_, train_reconstructions, _, _ = model._vq_vae(train_originals)
-
-
-# In[21]:
-
-
-def show(img):
-    npimg = img.numpy()
-    fig = plt.imshow(np.transpose(npimg, (1,2,0)), interpolation='nearest')
-    fig.axes.get_xaxis().set_visible(False)
-    fig.axes.get_yaxis().set_visible(False)
-
-
-# In[22]:
-
-
-show(make_grid(valid_reconstructions.cpu().data)+0.5, )
-
-
-# In[23]:
-
-
-show(make_grid(valid_originals.cpu()+0.5))
 
 
 # ## View Embedding
